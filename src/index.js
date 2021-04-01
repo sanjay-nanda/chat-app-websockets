@@ -2,6 +2,7 @@ const express = require('express')
 const http = require("http")
 const socketio = require("socket.io")
 const path = require("path")
+const Filter = require("bad-words")
 
 //for setting up socket.io
 const app = express();
@@ -19,9 +20,27 @@ io.on('connection', (socket) => {
     console.log('New WebSocket Connection');
 
     socket.emit('message', "Welcome!")
+    socket.broadcast.emit('message', 'A new user has joined')
 
-    socket.on('newmessage', (msg) => {
+    socket.on('newmessage', (msg, callback) => {
+
+        const filter = new Filter()
+
+        if(filter.isProfane(msg)){
+            return callback('Profanity is not allowed')
+        }
+
         io.emit('newmessageAdded', msg);
+    })
+
+    socket.on('disconnect', () => {
+        io.emit('message', 'User has left')
+    })
+
+    socket.on('sendLocation', (obj, callback) => {
+        console.log("Location: lattitude: " + obj.latitude + " Longitude: " + obj.longitude);
+        socket.broadcast.emit("userlocation","https://google.com/maps?@" + obj.latitude + "," + obj.longitude)
+        callback('Location Shared')
     })
 })
 
