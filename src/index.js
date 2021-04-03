@@ -15,7 +15,7 @@ const port = process.env.PORT || 3000;
 const publicDirectoryPath = path.join(__dirname, '../public');
 app.use(express.static(publicDirectoryPath))
 
-//prints when a client is connected to the server
+// listens for all the events emitted by the clients after they are connected
 io.on('connection', (socket) => {
     console.log('New WebSocket Connection');
 
@@ -30,7 +30,8 @@ io.on('connection', (socket) => {
             return callback('Profanity is not allowed')
         }
 
-        io.emit('newmessageAdded', msg);
+        io.emit('message', msg);
+        callback();
     })
 
     socket.on('disconnect', () => {
@@ -39,8 +40,8 @@ io.on('connection', (socket) => {
 
     socket.on('sendLocation', (obj, callback) => {
         console.log("Location: lattitude: " + obj.latitude + " Longitude: " + obj.longitude);
-        socket.broadcast.emit("userlocation","https://google.com/maps?@" + obj.latitude + "," + obj.longitude)
-        callback('Location Shared')
+        socket.broadcast.emit("userlocation",`https://google.com/maps?@${obj.latitude},${obj.longitude}`);
+        callback()
     })
 })
 
